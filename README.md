@@ -1,3 +1,18 @@
+# Porting to SUTIL - Work in progress
+- Updated to use latest fable (3.x)
+- Using webpack.config.js from Sutil
+- That webpack config is very simple and doesn't have the config
+for css, so ...
+    - Included bootstrap.css in index.html
+    - Replaced B.``row`` with "row" in FS source
+    - Removed CSS typed class
+- We can put those back in if we extend the webpack config
+- div -> Html.div
+- Class -> Attr.className
+- Background -> Css.backgroundColor
+- "30px" -> (px 30)
+- Remove all React references (open, hooks)
+- Include Sutil references
 # Fable.GroupingPanel
 The `groupingPanel` is a computation expression that helps you to easily group UI data in Fable into one or more collapsible groups.
 
@@ -9,11 +24,11 @@ Get it from NuGet!
 
 ## Message Inbox Example
 
-Imagine you are creating a messaging app that lists messages in the left pane.  
+Imagine you are creating a messaging app that lists messages in the left pane.
 You might start out with this:
 
 ```F#
-let page = React.functionComponent(fun () -> 
+let page = React.functionComponent(fun () ->
     container [
         div [Class "row"] [
             div [Class "col-3"; Style [Background "#ececec"]] [
@@ -34,16 +49,16 @@ let page = React.functionComponent(fun () ->
             div [Class "col-9 p-2"; Style [Background "whitesmoke"]] [
                 // Display message here...
             ]
-        ]        
+        ]
     ]
 )
-```   
+```
 Which yields:
 ![Sample Message App](documentation/imgs/MessageApp_Before.png)
 
 Now let's add some collapsable groups using the `groupingPanel` computation expression:
 ```F#
-let page = React.functionComponent(fun () ->     
+let page = React.functionComponent(fun () ->
     container [
         div [Class "row"] [
             div [Class "col-3"; Style [Background "#ececec"]] [
@@ -82,7 +97,7 @@ let page = React.functionComponent(fun () ->
             div [Class "col-9 p-2"; Style [Background "whitesmoke"]] [
                 b [] [str "Message Body..."]
             ]
-        ]        
+        ]
     ]
 )
 ```
@@ -91,7 +106,7 @@ Which yields:
 ![Sample Message App with Grouping](documentation/imgs/MessageApp_After.png)
 
 ## Users List Example
-This example uses two levels of grouping. 
+This example uses two levels of grouping.
 
 **Note that the "grouping modifiers" that are prefixed with `group` (like `groupCollapsedIf`) must be preceded by a `groupBy`.**
 
@@ -100,14 +115,14 @@ row [
     col [
         table [Class "table mt-4"] [
             tbody [] [
-                let headerTemplate header = 
+                let headerTemplate header =
                     tr [Style [Background "#ececec"]; OnClick header.ToggleOnClick] [
                         td [ColSpan 4] [
                             header.Chevron
                             span [] [str (sprintf "%s (%i)" header.GroupKey header.Group.Length)]
-                        ]                                    
+                        ]
                     ]
-                    
+
                 groupingPanel {
                     for user in filteredUsers() do
                     groupBy (if user.IsEnabled then "Active Users" else "Disabled Users")
@@ -128,13 +143,13 @@ row [
                                 input [
                                     Props.Type "checkbox"
                                     Style [Width "20px"; Height "32px"]
-                                    Class B.``form-control`` 
+                                    Class B.``form-control``
                                     DefaultChecked (user.IsEnabled)
                                 ]
                             ]
                         ]
                     )
-                } 
+                }
             ]
         ]
     ]
