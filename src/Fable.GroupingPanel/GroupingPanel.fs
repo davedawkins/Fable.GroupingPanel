@@ -5,6 +5,7 @@ open Sutil.Html
 open Sutil.DOM
 open Sutil.Svg
 open type Feliz.length;
+open Sutil.Transition
 
 type Props<'T, 'SortKey> = {
     /// A sequence of items in a group.
@@ -57,24 +58,16 @@ module private Chevron =
     let right = icon "M 4.646 1.646 a 0.5 0.5 0 0 1 0.708 0 l 6 6 a 0.5 0.5 0 0 1 0 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 -0.708 L 10.293 8 L 4.646 2.354 a 0.5 0.5 0 0 1 0 -0.708 Z"
     let down = icon "M 1.646 4.646 a 0.5 0.5 0 0 1 0.708 0 L 8 10.293 l 5.646 -5.647 a 0.5 0.5 0 0 1 0.708 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 0 l -6 -6 a 0.5 0.5 0 0 1 0 -0.708 Z"
 
+let mutable collapsedMap : Map<string,IStore<bool>> = Map.empty
+
 /// Component implementation
 let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'SortKey>) =
-    // let collapsed, setCollapsed =
-    //     match props.LocalStorageKey with
-    //     | None -> useState(Map.empty<string,bool>)
-    //     | Some key -> useLocalStorage(key, Map.empty<string,bool>)
 
-    let setIsCollapsed (groupKey, isCollapsed) = ()
-    //     setCollapsed(collapsed.Add(groupKey, isCollapsed))
+    let getStore key =
+        if not (collapsedMap.ContainsKey key) then
+            collapsedMap <- collapsedMap.Add(key, Store.make false)
+        collapsedMap.[key]
 
-    let getIsCollapsed (groupKey, firstItem, grpLvl) =
-        false
-        // match collapsed.TryFind groupKey with
-        // | Some b -> b
-        // | None ->
-        //     match grpLvl.Collapsed with
-        //     | Collapse b -> b
-        //     | CollapseIf pred -> pred(firstItem)
 
     let rec renderGroups (level: int, aggregateKey: string, items: 'T list) =
         let grpLvl = props.GroupingLevels.[level]
@@ -95,13 +88,15 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
 
             let onClick (e: Browser.Types.MouseEvent) =
                 e.stopPropagation()
-                setIsCollapsed(aggregateKey, not (getIsCollapsed(aggregateKey, firstItem, grpLvl)))
+                getStore aggregateKey |> Store.modify not
 
             let chevronButton =
                 let style = Attr.style [Css.padding (px 0); Css.paddingLeft (px (25 * level)); Css.cursorPointer ]
-                if getIsCollapsed(aggregateKey, firstItem, grpLvl)
-                then Html.span [Ev.onClick onClick; Attr.alt "Expand Group"; style ; Chevron.right]
-                else Html.span [Ev.onClick onClick; Attr.alt "Collapse Group"; style; Chevron.down]
+
+                Bind.el (getStore aggregateKey, fun isCollapsed ->
+                    if isCollapsed //getIsCollapsed(aggregateKey, firstItem, grpLvl)
+                    then Html.span [Ev.onClick onClick; Attr.alt "Collapse Group"; style; Chevron.down]
+                    else Html.span [Ev.onClick onClick; Attr.alt "Expand Group"; style ; Chevron.right])
 
             let groupInfo =
                 { GroupKey = groupKey
@@ -121,7 +116,7 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                 //FragmentProp.Key aggregateKey
                 yield header
 
-                if not (getIsCollapsed(aggregateKey, firstItem, grpLvl)) then
+                yield (transition [InOut fade] (getStore aggregateKey) (fragment [
                     if props.GroupingLevels.Length > (level + 1) then
                         // Render next group
                         yield renderGroups(level + 1, aggregateKey, group)
@@ -132,6 +127,8 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                             |> Seq.filter (fun item -> groupKey = grpLvl.KeySelector item)
                             |> Seq.map props.ItemTemplate
                             |> fragment
+
+                ]))
 
                 yield footer
             ]
