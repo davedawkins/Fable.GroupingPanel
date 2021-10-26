@@ -13,6 +13,10 @@ for css, so ...
 - "30px" -> (px 30)
 - Remove all React references (open, hooks)
 - Include Sutil references
+- Use Sutil transition to show/hide group members
+- Use Sutil.el binding to change chevron (expand indicator)
+- OnClick now just updates the store belonging to the group, and the transition/bindings react accordingly
+
 # Fable.GroupingPanel
 The `groupingPanel` is a computation expression that helps you to easily group UI data in Fable into one or more collapsible groups.
 
