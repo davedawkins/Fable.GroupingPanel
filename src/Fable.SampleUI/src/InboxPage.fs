@@ -1,20 +1,19 @@
 ﻿module InboxPage
 
 open Fable
-open Fable.React
-open Fable.React.Props
-open Feliz
 open GroupingPanel
 open System
-open Css
-
+open Sutil
+open Sutil.Html
+open Sutil.DOM
+open type Feliz.length
 type Email = {
     From: string
     Subject: string
     Received: DateTime
 }
 
-let email from subject rcvd = 
+let email from subject rcvd =
     { From = from; Subject = subject; Received = rcvd }
 
 let today = DateTime.Today
@@ -31,12 +30,17 @@ let getEmails() =
     |> List.sortBy (fun e -> e.Received)
 
 
-let page = React.functionComponent(fun () ->     
-    div [Class B.container] [
-        div [Class B.row] [
-            div [Class B.``col-3``; Style [Background "#ececec"]] [
-                table [Class B.table] [
-                    tbody [] [
+let page() =
+    Html.div [
+        Attr.className "container"
+        Html.div [
+            Attr.className "row"
+            Html.div [
+                Attr.className "col-3"
+                Attr.style [Css.backgroundColor "#ececec"]
+                Html.table [
+                    Attr.className "table"
+                    Html.tbody [
                         groupingPanel {
                             for email in getEmails() do
                             groupBy (
@@ -47,19 +51,25 @@ let page = React.functionComponent(fun () ->
                             )
                             groupSortByDescending (email.Received)
                             groupHeader (fun header ->
-                                tr [OnClick header.ToggleOnClick] [
-                                    td [Style [Width "10px"]] [header.Chevron]
-                                    td [] [str header.GroupKey]
+                                Html.tr [
+                                    Ev.onClick header.ToggleOnClick
+                                    Html.td [
+                                        Attr.style [ Css.width (px 10) ]
+                                        header.Chevron
+                                    ]
+                                    Html.td [text header.GroupKey]
                                 ]
                             )
                             groupCollapsedIf (email.Received < today)
                             select (
-                                tr [] [
-                                    td [] []
-                                    td [] [
-                                        div [] [str email.From]
-                                        div [Style [FontWeight "bold"]] [str email.Subject]
-                                        div [] [str (email.Received.ToShortDateString())]
+                                Html.tr [
+                                    Html.td []
+                                    Html.td [
+                                        Html.div [text email.From]
+                                        Html.div [
+                                            Attr.style [Css.fontWeight 700]
+                                            text email.Subject]
+                                        Html.div [text (email.Received.ToShortDateString())]
                                     ]
                                 ]
                             )
@@ -67,9 +77,10 @@ let page = React.functionComponent(fun () ->
                     ]
                 ]
             ]
-            div [classes [B.``col-9``; B.``p-2``]; Style [Background "whitesmoke"]] [
-                b [] [str "Message Body..."]
+            Html.div [
+                Attr.classes ["col-9"; "p-2" ]
+                Attr.style [Css.backgroundColor "whitesmoke"]
+                text "Message Body..."
             ]
-        ]        
+        ]
     ]
-)

@@ -2,10 +2,12 @@ module Main
 
 open Fable.Core.JsInterop
 open Browser.Dom
-open Feliz
+open Sutil
+open Sutil.Html
 
 //importAll "../styles/main.scss"
-importAll "../styles/bootstrap.min.css"
+//importAll "../styles/bootstrap.min.css"
 
 // App
-ReactDOM.render(App.app, document.getElementById "feliz-app")
+App.app() |> Sutil.Program.mountElement "feliz-app"
+//ReactDOM.render(App.app, document.getElementById "feliz-app")

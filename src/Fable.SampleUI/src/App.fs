@@ -1,26 +1,34 @@
 module App
 
-open Feliz
-open Fable.React
-open Fable.React.Props
-open Css
+open Sutil
+open Sutil.DOM
+open Sutil.Html
+open Fable.Core
+open Fable.Core.JsInterop
 
-let app = React.functionComponent(fun () ->
-    let routes = {| 
+// TODO
+let useRoutes (routes : obj) : SutilElement option =
+    let f : unit -> SutilElement = routes?``/``
+    Some (f())
+
+let app() =
+    let routes = {|
         ``/`` = fun _ -> InboxPage.page()
         ``/Inbox`` = fun _ -> InboxPage.page()
         ``/Users`` = fun _ -> UsersPage.page()
     |}
 
-    let content = 
-        HookRouter.useRoutes routes 
-        |> Option.defaultValue (h1 [] [str "Not Found"])
+    let content =
+        useRoutes routes
+        |> Option.defaultValue (Html.h1 [text "Not Found"])
 
-    div [Class B.container] [
-        div [Class B.row] [
-            div [Class B.col] [
+    Html.div [
+        Attr.className "container"
+        Html.div [
+            Attr.className "row"
+            Html.div [
+                Attr.className "col"
                 content
             ]
         ]
     ]
-)

@@ -14,17 +14,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Hooks.fs" />
     <Compile Include="GroupingPanel.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fable.React" Version="6.2.0" />
+    <PackageReference Include="Sutil" Version="1.0.0-*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Fable.SimpleJson" Version="3.11.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+    <PackageReference Include="FSharp.Core" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,5 +40,5 @@
   <ItemGroup>
     <Content Include="*.fsproj; *.fs" PackagePath="fable\" />
   </ItemGroup>
-    
+
 </Project>
