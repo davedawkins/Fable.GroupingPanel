@@ -58,16 +58,15 @@ module private Chevron =
     let right = icon "M 4.646 1.646 a 0.5 0.5 0 0 1 0.708 0 l 6 6 a 0.5 0.5 0 0 1 0 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 -0.708 L 10.293 8 L 4.646 2.354 a 0.5 0.5 0 0 1 0 -0.708 Z"
     let down = icon "M 1.646 4.646 a 0.5 0.5 0 0 1 0.708 0 L 8 10.293 l 5.646 -5.647 a 0.5 0.5 0 0 1 0.708 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 0 l -6 -6 a 0.5 0.5 0 0 1 0 -0.708 Z"
 
-let mutable collapsedMap : Map<string,IStore<bool>> = Map.empty
+let mutable expandedMap : Map<string,IStore<bool>> = Map.empty
+
+let getIsExpandedStore key =
+    if not (expandedMap.ContainsKey key) then
+        expandedMap <- expandedMap.Add(key, Store.make false)
+    expandedMap.[key]
 
 /// Component implementation
 let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'SortKey>) =
-
-    let getStore key =
-        if not (collapsedMap.ContainsKey key) then
-            collapsedMap <- collapsedMap.Add(key, Store.make false)
-        collapsedMap.[key]
-
 
     let rec renderGroups (level: int, aggregateKey: string, items: 'T list) =
         let grpLvl = props.GroupingLevels.[level]
@@ -88,15 +87,15 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
 
             let onClick (e: Browser.Types.MouseEvent) =
                 e.stopPropagation()
-                getStore aggregateKey |> Store.modify not
+                getIsExpandedStore aggregateKey |> Store.modify not
 
             let chevronButton =
                 let style = Attr.style [Css.padding (px 0); Css.paddingLeft (px (25 * level)); Css.cursorPointer ]
 
-                Bind.el (getStore aggregateKey, fun isCollapsed ->
-                    if isCollapsed //getIsCollapsed(aggregateKey, firstItem, grpLvl)
-                    then Html.span [Ev.onClick onClick; Attr.alt "Collapse Group"; style; Chevron.down]
-                    else Html.span [Ev.onClick onClick; Attr.alt "Expand Group"; style ; Chevron.right])
+                Bind.el (getIsExpandedStore aggregateKey, fun isExpanded ->
+                    if isExpanded //getIsCollapsed(aggregateKey, firstItem, grpLvl)
+                    then Html.span [Ev.onClick onClick; Attr.alt "Collapse Group"; style ; Chevron.down]
+                    else Html.span [Ev.onClick onClick; Attr.alt "Expand Group"; style; Chevron.right])
 
             let groupInfo =
                 { GroupKey = groupKey
@@ -116,7 +115,7 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                 //FragmentProp.Key aggregateKey
                 yield header
 
-                yield (transition [InOut fade] (getStore aggregateKey) (fragment [
+                yield (transition [InOut fade] (getIsExpandedStore aggregateKey) (fragment [
                     if props.GroupingLevels.Length > (level + 1) then
                         // Render next group
                         yield renderGroups(level + 1, aggregateKey, group)
