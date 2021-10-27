@@ -14,12 +14,6 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Fable.GroupingPanel\Fable.GroupingPanel.fsproj" />
     </ItemGroup>
-
-<!--
-    <ItemGroup>
-        <PackageReference Include="Sutil" Version="1.0.0-*" />
-    </ItemGroup>
--->
     <ItemGroup>
     <PackageReference Include="FSharp.Core" Version="5.0.2" />
     </ItemGroup>
