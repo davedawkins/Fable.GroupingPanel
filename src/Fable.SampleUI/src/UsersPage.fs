@@ -68,33 +68,34 @@ let page() =
                             groupBy (getCompany user)
                             groupHeader headerTemplate
                             select (
-                                Html.tr [
-                                    Attr.custom("Key","usr_" + user.Email)
-                                    Html.td []
-                                    Html.td [
-                                        Attr.style [ Css.lineHeight (px 30) ]
-                                        text user.Email
-                                    ]
-                                    Html.td [
-                                        text user.Username
-                                    ]
-                                    Html.td [
-                                        Html.input [
-                                            Attr.type' "checkbox"
-                                            Attr.style [Css.width (px 20); Css.height (px 32)]
-                                            Attr.className "form-control"
-                                            Attr.isChecked (user.IsEnabled)
-                                            Ev.onChange (fun (e: bool) -> ())
-                                            // Ev.onChange (fun e ->
-                                            //     users |> List.map (fun u ->
-                                            //         if u.Email = user.Email
-                                            //         then { u with IsEnabled = not u.IsEnabled }
-                                            //         else u
-                                            //     ) |> ignore //setUsers
-                                            // )
+                                fun group user ->
+                                    Html.tr [
+                                        Attr.custom("Key","usr_" + user.Email)
+                                        Html.td []
+                                        Html.td [
+                                            Attr.style [ Css.lineHeight (px 30) ]
+                                            text user.Email
+                                        ]
+                                        Html.td [
+                                            text user.Username
+                                        ]
+                                        Html.td [
+                                            Html.input [
+                                                Attr.type' "checkbox"
+                                                Attr.style [Css.width (px 20); Css.height (px 32)]
+                                                Attr.className "form-control"
+                                                Attr.isChecked (user.IsEnabled)
+                                                Ev.onChange (fun (e: bool) -> ())
+                                                // Ev.onChange (fun e ->
+                                                //     users |> List.map (fun u ->
+                                                //         if u.Email = user.Email
+                                                //         then { u with IsEnabled = not u.IsEnabled }
+                                                //         else u
+                                                //     ) |> ignore //setUsers
+                                                // )
+                                            ]
                                         ]
                                     ]
-                                ]
                             )
                         }
                     ]

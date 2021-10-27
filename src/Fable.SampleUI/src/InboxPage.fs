@@ -62,16 +62,20 @@ let page() =
                             )
                             groupCollapsedIf (email.Received < today)
                             select (
-                                Html.tr [
-                                    Html.td []
-                                    Html.td [
-                                        Html.div [text email.From]
-                                        Html.div [
-                                            Attr.style [Css.fontWeight 700]
-                                            text email.Subject]
-                                        Html.div [text (email.Received.ToShortDateString())]
+                                fun group email ->
+                                    Html.tr [
+                                        Bind.className (group.Expanded .> function true -> "expanded"|false -> "collapsed")
+                                        Html.td [ ]
+                                        Html.td [
+                                            Html.div [ // Wrapper div that lets us control max-height of the td
+                                                Html.div [text email.From]
+                                                Html.div [
+                                                    Attr.style [Css.fontWeight 700]
+                                                    text email.Subject]
+                                                Html.div [text (email.Received.ToShortDateString())]
+                                            ]
+                                        ]
                                     ]
-                                ]
                             )
                         }
                     ]

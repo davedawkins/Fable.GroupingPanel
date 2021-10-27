@@ -5,7 +5,6 @@ open Sutil.Html
 open Sutil.DOM
 open Sutil.Svg
 open type Feliz.length;
-open Sutil.Transition
 
 type Props<'T, 'SortKey> = {
     /// A sequence of items in a group.
@@ -15,7 +14,7 @@ type Props<'T, 'SortKey> = {
     /// Defines one or more grouping levels.
     GroupingLevels: GroupingLevel<'T, 'SortKey> list
     /// Provides an React template to render each item in a group.
-    ItemTemplate: 'T -> SutilElement
+    ItemTemplate: GroupInfo<'T> -> 'T -> SutilElement
 }
 
 and GroupingLevel<'T, 'SortKey> = {
@@ -46,6 +45,7 @@ and GroupInfo<'T> = {
     FirstItem: 'T
     Chevron: SutilElement
     ToggleOnClick: Browser.Types.MouseEvent -> unit
+    Expanded : IStore<bool>
 }
 
 module private Chevron =
@@ -57,6 +57,7 @@ module private Chevron =
         ]
     let right = icon "M 4.646 1.646 a 0.5 0.5 0 0 1 0.708 0 l 6 6 a 0.5 0.5 0 0 1 0 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 -0.708 L 10.293 8 L 4.646 2.354 a 0.5 0.5 0 0 1 0 -0.708 Z"
     let down = icon "M 1.646 4.646 a 0.5 0.5 0 0 1 0.708 0 L 8 10.293 l 5.646 -5.647 a 0.5 0.5 0 0 1 0.708 0.708 l -6 6 a 0.5 0.5 0 0 1 -0.708 0 l -6 -6 a 0.5 0.5 0 0 1 0 -0.708 Z"
+
 
 let mutable expandedMap : Map<string,IStore<bool>> = Map.empty
 
@@ -85,15 +86,17 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
 
             let aggregateKey = sprintf "%s > %s" aggregateKey groupKey
 
+            let isExpanded = getIsExpandedStore aggregateKey
+
             let onClick (e: Browser.Types.MouseEvent) =
                 e.stopPropagation()
-                getIsExpandedStore aggregateKey |> Store.modify not
+                isExpanded |> Store.modify not
 
             let chevronButton =
                 let style = Attr.style [Css.padding (px 0); Css.paddingLeft (px (25 * level)); Css.cursorPointer ]
 
-                Bind.el (getIsExpandedStore aggregateKey, fun isExpanded ->
-                    if isExpanded //getIsCollapsed(aggregateKey, firstItem, grpLvl)
+                Bind.el (isExpanded, fun isExpanded ->
+                    if isExpanded
                     then Html.span [Ev.onClick onClick; Attr.alt "Collapse Group"; style ; Chevron.down]
                     else Html.span [Ev.onClick onClick; Attr.alt "Expand Group"; style; Chevron.right])
 
@@ -102,7 +105,9 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                   Group = group
                   FirstItem = firstItem
                   Chevron = chevronButton
-                  ToggleOnClick = onClick }
+                  ToggleOnClick = onClick
+                  Expanded = isExpanded
+                  }
 
             let header = grpLvl.HeaderTemplate groupInfo
 
@@ -115,7 +120,7 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                 //FragmentProp.Key aggregateKey
                 yield header
 
-                yield (transition [InOut fade] (getIsExpandedStore aggregateKey) (fragment [
+                yield fragment [
                     if props.GroupingLevels.Length > (level + 1) then
                         // Render next group
                         yield renderGroups(level + 1, aggregateKey, group)
@@ -124,10 +129,10 @@ let private render<'T, 'SortKey when 'SortKey : comparison> (props: Props<'T, 'S
                         yield
                             group
                             |> Seq.filter (fun item -> groupKey = grpLvl.KeySelector item)
-                            |> Seq.map props.ItemTemplate
+                            |> Seq.map (props.ItemTemplate groupInfo)
                             |> fragment
 
-                ]))
+                ]
 
                 yield footer
             ]
@@ -173,7 +178,7 @@ type GroupingPanelBuilder() =
         { Items = Seq.empty
           LocalStorageKey = None
           GroupingLevels = []
-          ItemTemplate = fun item -> fragment [] }
+          ItemTemplate = fun group item -> fragment [] }
 
     let getLastAndRest lst =
         match lst with
@@ -264,7 +269,7 @@ type GroupingPanelBuilder() =
 
     /// Creates an item template.
     [<CustomOperation("select", MaintainsVariableSpace=true)>]
-    member this.Select (props, [<ProjectionParameter>] tmpl) =
+    member this.Select (props, tmpl) =
         { props with ItemTemplate = tmpl }
 
     member this.Run props =
